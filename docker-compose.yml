@@ -1,0 +1,68 @@
+version: '3'
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: ecommerce
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - demo-network
+
+  product-service:
+    build: ./product-service
+    container_name: product-service
+    restart: on-failure
+    environment:
+      MYSQL_HOST: mysql
+      MYSQL_PORT: 3306
+      MYSQL_USER: root
+      MYSQL_PASSWORD: password
+      MYSQL_DB: ecommerce
+    depends_on:
+      - mysql
+    ports:
+      - "3001:3001"
+    networks:
+      - demo-network
+
+  order-service:
+    build: ./order-service
+    container_name: order-service
+    restart: on-failure
+    environment:
+      MYSQL_HOST: mysql
+      MYSQL_PORT: 3306
+      MYSQL_USER: root
+      MYSQL_PASSWORD: password
+      MYSQL_DB: ecommerce
+    depends_on:
+      - mysql
+    ports:
+      - "3002:3002"
+    networks:
+      - demo-network
+
+  client:
+    build: ./client
+    container_name: client
+    restart: on-failure
+    depends_on:
+      - product-service
+      - order-service
+    ports:
+      - "3000:3000"
+    networks:
+      - demo-network
+
+volumes:
+  mysql_data:
+
+networks:
+  demo-network:
+    driver: bridge
